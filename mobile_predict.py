@@ -11,7 +11,7 @@ from models.network_swinir import SwinIR as net
 
 def mobile_infer():
 
-    scale = 2 # TODO(programe this)
+    scale = 8 # TODO(programe this)
     window_size = 8 # TODO(program this)
     parser = argparse.ArgumentParser()
     parser.add_argument('--image', type=str, help='path to input image')
@@ -44,9 +44,9 @@ def mobile_infer():
         w_pad = (w_old // window_size + 1) * window_size - w_old
         img_lq = torch.cat([img_lq, torch.flip(img_lq, [2])], 2)[:, :, :h_old + h_pad, :]
         img_lq = torch.cat([img_lq, torch.flip(img_lq, [3])], 3)[:, :, :, :w_old + w_pad]
-        # model_path = args.model
-        # print(f'model path: {model_path}')
-        # model = _load_for_lite_interpreter(model_path)
+        model_path = args.model
+        print(f'model path: {model_path}')
+        model = _load_for_lite_interpreter(model_path)
         output = model(img_lq)
         output = output[..., :h_old * scale, :w_old * scale]
 

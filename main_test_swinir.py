@@ -10,6 +10,8 @@ import requests
 from models.network_swinir import SwinIR as net
 from utils import util_calculate_psnr_ssim as util
 
+from torch.utils.mobile_optimizer import optimize_for_mobile
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -62,6 +64,12 @@ def main():
         img_lq = np.transpose(img_lq if img_lq.shape[2] == 1 else img_lq[:, :, [2, 1, 0]], (2, 0, 1))  # HCW-BGR to CHW-RGB
         img_lq = torch.from_numpy(img_lq).float().unsqueeze(0).to(device)  # CHW-RGB to NCHW-RGB
 
+        if (idx == 0):
+            scripted_module = torch.jit.trace(model, img_lq)
+            torch.jit.save(scripted_module, f"jit_{args.task}.pt")
+            opt_model = optimize_for_mobile(scripted_module)
+            opt_model._save_for_lite_interpreter("lite_{args.task}.ptl")
+
         # inference
         with torch.no_grad():
             # pad input image to be a multiple of window_size
@@ -72,6 +80,9 @@ def main():
             img_lq = torch.cat([img_lq, torch.flip(img_lq, [3])], 3)[:, :, :, :w_old + w_pad]
             output = test(img_lq, model, args, window_size)
             output = output[..., :h_old * args.scale, :w_old * args.scale]
+
+
+
 
         # save image
         output = output.data.squeeze().float().cpu().clamp_(0, 1).numpy()
