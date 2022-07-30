@@ -68,7 +68,7 @@ def main():
             scripted_module = torch.jit.trace(model, img_lq)
             torch.jit.save(scripted_module, f"jit_{args.task}.pt")
             opt_model = optimize_for_mobile(scripted_module)
-            opt_model._save_for_lite_interpreter("lite_{args.task}.ptl")
+            opt_model._save_for_lite_interpreter(f"lite_{args.task}.ptl")
 
         # inference
         with torch.no_grad():

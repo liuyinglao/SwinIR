@@ -11,7 +11,7 @@ from models.network_swinir import SwinIR as net
 
 def mobile_infer():
 
-    scale = 8 # TODO(programe this)
+    scale = 4 # TODO(programe this)
     window_size = 8 # TODO(program this)
     parser = argparse.ArgumentParser()
     parser.add_argument('--image', type=str, help='path to input image')
