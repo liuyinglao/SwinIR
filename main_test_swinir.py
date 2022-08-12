@@ -30,6 +30,7 @@ def main():
     parser.add_argument('--folder_gt', type=str, default=None, help='input ground-truth test image folder')
     parser.add_argument('--tile', type=int, default=None, help='Tile size, None for no tile during testing (testing as a whole)')
     parser.add_argument('--tile_overlap', type=int, default=32, help='Overlapping of different tiles')
+    parser.add_argument('--export_mobile_model', action='store_true', help='export pretrained model runnable on mobile')
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -64,11 +65,11 @@ def main():
         img_lq = np.transpose(img_lq if img_lq.shape[2] == 1 else img_lq[:, :, [2, 1, 0]], (2, 0, 1))  # HCW-BGR to CHW-RGB
         img_lq = torch.from_numpy(img_lq).float().unsqueeze(0).to(device)  # CHW-RGB to NCHW-RGB
 
-        if (idx == 0):
+        # use the first test input to trace the model to build scripted module
+        if (args.export_mobile_model and idx == 0):
             scripted_module = torch.jit.trace(model, img_lq)
-            torch.jit.save(scripted_module, f"jit_{args.task}.pt")
             opt_model = optimize_for_mobile(scripted_module)
-            opt_model._save_for_lite_interpreter(f"lite_{args.task}.ptl")
+            opt_model._save_for_lite_interpreter(f"mobile/lite_{args.task}_{args.scale}x.ptl")
 
         # inference
         with torch.no_grad():
